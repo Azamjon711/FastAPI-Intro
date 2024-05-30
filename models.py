@@ -17,7 +17,7 @@ class Users(Base):
     is_staff = Column(Boolean, default=False)
     is_active = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)
-    orders = relationship('Order', back_populates='users')
+    orders = relationship('Orders', back_populates='users')
 
     def __repr__(self):
         return self.first_name
@@ -42,7 +42,7 @@ class Product(Base):
     price = Column(Float)
     category_id = Column(Integer, ForeignKey('category.id'))
     category = relationship('Category', back_populates='product')
-    orders = relationship('Order', back_populates='product')
+    orders = relationship('Orders', back_populates='product')
 
 
 class Orders(Base):
@@ -50,7 +50,7 @@ class Orders(Base):
     __tablename__ = 'orders'
 
     id = Column(Integer, primary_key=True)
-    users_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'))
     users = relationship('Users', back_populates='orders')
     product_id = Column(Integer, ForeignKey('product.id'))
     product = relationship('Product', back_populates='orders')

@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from fastapi import status
 from schemas import RegisterModel, LoginModel
 from werkzeug import security
+from fastapi.encoders import jsonable_encoder
 
 session = session(bind=ENGINE)
 
@@ -69,6 +70,26 @@ async def login(user: LoginModel):
 
     return HTTPException(detail="username yoki password xato")
 
+
+@auth_router.get("/list")
+async def users_data(status_code=status.HTTP_200_OK):
+    users = session.query(Users).all()
+    context = [
+        {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "username": user.username,
+            "is_staff": user.is_staff,
+            "is_active": user.is_active,
+            "password": user.password,
+        }
+
+        for user in users
+    ]
+
+    return jsonable_encoder(context)
 
 
 @auth_router.get("/logout")
