@@ -50,3 +50,7 @@ class OrderModel(BaseModel):
     id: Optional[int]
     user_id: int
     product_id: int
+
+
+class UserOrder(BaseModel):
+    username: str

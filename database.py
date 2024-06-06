@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-ENGINE = create_engine("postgresql://'db_user':'db_password'@localhost/'db_name'", echo=True)
+ENGINE = create_engine("postgresql://postgres:13050@localhost/fastapi", echo=True)
 
 Base = declarative_base()
 session = sessionmaker()

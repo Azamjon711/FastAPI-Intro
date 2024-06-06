@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from database import ENGINE, session
-from models import Users
+from models import User
 from fastapi import HTTPException
 from fastapi import status
 from schemas import RegisterModel, LoginModel

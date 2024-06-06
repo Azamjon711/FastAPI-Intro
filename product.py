@@ -1,52 +1,56 @@
-from fastapi import APIRouter, HTTPException, status
-from models import Product, Category
-from schemas import ProductModel
-from fastapi.encoders import jsonable_encoder
-from database import session, ENGINE
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean, Float
+from sqlalchemy.orm import relationship
+from sqlalchemy_utils.types import ChoiceType
+from database import Base
 
-session = session(bind=ENGINE)
+class User(Base):
+    __tablename__ = 'users'
 
-product_router = APIRouter(prefix="/product")
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(20), nullable=True)
+    last_name = Column(String(20), nullable=True)
+    username = Column(String(10), unique=True)
+    email = Column(Text, nullable=True)
+    password = Column(Text, nullable=True)
+    is_staff = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=False)
+    orders = relationship('Order', back_populates='users')
+
+    def __repr__(self):
+        return self.first_name
+
+class Category(Base):
+    __tablename__ = 'category'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    product = relationship('Product', back_populates='category')
+
+class Product(Base):
+
+    __tablename__ = 'product'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    description = Column(Text)
+    price = Column(Float, nullable=False)
+    category_id = Column(Integer, ForeignKey('category.id'))
+    category = relationship('Category', back_populates='product')
+    orders = relationship('Order', back_populates='product')
 
 
-@product_router.get("/")
-async def product_list():
-    products = session.query(Product).all()
-    context = [
-        {
-            "id": product.id,
-            "name": product.name,
-            "description": product.description,
-            "price": product.price,
-            "category_id": product.category_id,
-        }
-        for product in products
-    ]
+class Order(Base):
+    __tablename__ = 'orders'
+    OrderChoices = (
+        ("PENDING", "pending"),
+        ("TRANSIT", 'transit'),
+        ("DELIVERED", "delivered")
+    )
 
-    return jsonable_encoder(context)
-
-@product_router.post("/create")
-async def create(product: ProductModel):
-    check_product = session.query(Product).filter(Product.id == product.id).first()
-    check_category_id = session.query(Category).filter(Category.id == product.category_id).first()
-
-    if check_product:
-        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already exist")
-    elif check_category_id:
-        new_product = Product(
-            id=product.id,
-            name=product.name,
-            description=product.description,
-            price=product.price,
-            category_id=product.category_id,
-        )
-        session.add(new_product)
-        session.commit()
-        data = {
-            "code": 201,
-            "msg": "successful"
-        }
-        return jsonable_encoder(data)
-
-    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="category_id already exist")
-
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    product_id = Column(Integer, ForeignKey('product.id'))
+    count = Column(Integer)
+    order_status = Column(ChoiceType(choices=OrderChoices), default="PENDING")
+    users = relationship('User', back_populates='orders')
+    product = relationship('Product', back_populates='orders')
